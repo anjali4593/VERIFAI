@@ -23,3 +23,19 @@ dist-ssr
 *.sln
 *.sw?
 
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+
+# Temporary files
+*.tmp

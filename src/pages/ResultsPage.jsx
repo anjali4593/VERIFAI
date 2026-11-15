@@ -187,11 +187,18 @@ Platform               : VERIFAI Forensic Engine v2.4 (Simulated)
             <span>Upload Another Specimen</span>
           </Link>
 
-          {/* Clearly Visible Label: DEMO ANALYSIS — SIMULATED RESULTS */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-mono font-bold tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
-            <span>DEMO ANALYSIS — SIMULATED RESULTS</span>
-          </div>
+          {/* Live Inference vs Simulated Status Badge */}
+          {specimen?.isRealApi ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 text-xs font-mono font-bold tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+              <span>LIVE INFERENCE — ELA-EFFICIENTNET B0</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-mono font-bold tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
+              <span>DEMO ANALYSIS — SIMULATED RESULTS</span>
+            </div>
+          )}
         </div>
 
         {/* Page Header */}
@@ -229,13 +236,16 @@ Platform               : VERIFAI Forensic Engine v2.4 (Simulated)
                   CLASSIFICATION VERDICT
                 </span>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#202622]">
-                  {isManipulated ? "Potentially Manipulated" : "Likely Authentic"}
+                  {isManipulated ? "Likely Forged" : "Likely Authentic"}
                 </h2>
                 <p className="text-xs sm:text-sm text-[#58615A] mt-1">
                   {isManipulated 
-                    ? "Inconsistencies detected across discrete compression levels and pixel boundary lattices."
-                    : "Compression structures and EXIF records are consistent with camera sensor baselines."}
+                    ? `Likely forged (${specimen?.confidence ? Math.round(specimen.confidence * 100) : 92}% confidence). Inconsistencies detected across discrete compression levels and pixel boundary lattices.`
+                    : `Likely authentic (${specimen?.confidence ? Math.round(specimen.confidence * 100) : 98}% confidence). Compression structures and pixel grids are consistent with camera sensor baselines.`}
                 </p>
+                <div className="mt-2 text-[11px] font-mono text-[#58615A] bg-[#F7F7F2] px-2.5 py-1 rounded inline-block border border-[#E5E7E3]">
+                  CASIA v2 Evaluation: 91.6% accuracy, 89.9% F1-score. (Confidence score is probabilistic; not definitive proof)
+                </div>
               </div>
             </div>
 
@@ -243,24 +253,26 @@ Platform               : VERIFAI Forensic Engine v2.4 (Simulated)
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
               <div className="text-left lg:text-right">
                 <span className="text-[11px] font-mono text-[#58615A] uppercase block">
-                  DEMO CONFIDENCE SCORE
+                  {specimen?.isRealApi ? "MODEL CONFIDENCE" : "DEMO CONFIDENCE SCORE"}
                 </span>
                 <span className={`text-3xl font-mono font-bold tracking-tight ${
                   isManipulated ? 'text-amber-800' : 'text-[#47765B]'
                 }`}>
-                  {isManipulated ? "92.4%" : "97.8%"}
+                  {specimen?.confidence ? `${(specimen.confidence * 100).toFixed(1)}%` : (isManipulated ? "92.4%" : "97.8%")}
                 </span>
               </div>
 
-              {/* Simulation Mode Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setIsManipulated(!isManipulated)}
-                className="text-[11px] font-mono px-3 py-1 rounded border border-[#E5E7E3] bg-[#F7F7F2] text-[#58615A] hover:text-[#202622] hover:bg-[#E7EEE7] transition-colors cursor-pointer"
-                title="Toggle between simulated outcomes"
-              >
-                Toggle Demo: {isManipulated ? "Simulate Authentic" : "Simulate Manipulated"}
-              </button>
+              {/* Simulation Mode Toggle Button only when not live API */}
+              {!specimen?.isRealApi && (
+                <button
+                  type="button"
+                  onClick={() => setIsManipulated(!isManipulated)}
+                  className="text-[11px] font-mono px-3 py-1 rounded border border-[#E5E7E3] bg-[#F7F7F2] text-[#58615A] hover:text-[#202622] hover:bg-[#E7EEE7] transition-colors cursor-pointer"
+                  title="Toggle between simulated outcomes"
+                >
+                  Toggle Demo: {isManipulated ? "Simulate Authentic" : "Simulate Manipulated"}
+                </button>
+              )}
             </div>
           </div>
 

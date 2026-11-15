@@ -154,10 +154,11 @@ export default function AnalyzePage() {
     return (bytes / 1024).toFixed(1) + ' KB';
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!file || !previewUrl) return;
 
     setIsAnalyzing(true);
+    setErrorMessage('');
 
     const imagePayload = {
       name: file.name,
@@ -167,7 +168,31 @@ export default function AnalyzePage() {
       lastModified: file.lastModified ? new Date(file.lastModified).toISOString() : new Date().toISOString(),
       previewUrl: previewUrl,
       verdict: file.verdict || 'manipulated',
+      isRealApi: false,
     };
+
+    // Attempt live inference via backend API
+    try {
+      if (file instanceof File || file instanceof Blob) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('http://127.0.0.1:8000/predict', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || errData.detail || 'Could not process image on server');
+        }
+        const data = await res.json();
+        imagePayload.label = data.label; // "forged" or "authentic"
+        imagePayload.confidence = data.confidence;
+        imagePayload.verdict = data.label === 'forged' ? 'manipulated' : 'authentic';
+        imagePayload.isRealApi = true;
+      }
+    } catch (err) {
+      console.warn('Backend inference unavailable or failed:', err);
+    }
 
     // Store in sessionStorage as fallback
     try {
@@ -181,11 +206,8 @@ export default function AnalyzePage() {
       // Ignore storage errors if quota is exceeded
     }
 
-    // Simulate 2-second forensic processing pipeline
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      navigate('/results', { state: { specimen: imagePayload } });
-    }, 2000);
+    setIsAnalyzing(false);
+    navigate('/results', { state: { specimen: imagePayload } });
   };
 
   return (
